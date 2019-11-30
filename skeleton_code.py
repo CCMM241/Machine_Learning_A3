@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score
 ## this is an edit. 
 
 ## Read csvs
-train_df = pd.read_csv('train.csv', index_col=0)
+train_f = pd.read_csv('train.csv', index_col=0)
 test_df = pd.read_csv('test.csv', index_col=0)
 
 ## Handle missing values
