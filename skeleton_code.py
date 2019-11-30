@@ -10,7 +10,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
 
 ## Read csvs
-training_dataframe = pd.read_csv('train.csv', index_col=0)
+train_f = pd.read_csv('train.csv', index_col=0)
 test_df = pd.read_csv('test.csv', index_col=0)
 
 ## Handle missing values
