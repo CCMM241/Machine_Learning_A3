@@ -1,69 +1,56 @@
 """
-This script can be used as skelton code to read the challenge train and test
-csvs, to train a trivial model, and write data to the submission file.
+This is a skeleton code to our project
 """
 import pandas as pd
-
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC, LinearSVC
+from xgboost import XGBClassifier
 
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import make_scorer, accuracy_score, roc_auc_score 
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import train_test_split
 
-## Read csvs
-train_f = pd.read_csv('train.csv', index_col=0)
-test_df = pd.read_csv('test.csv', index_col=0)
+#features contains the list of dimensions
+features = []
 
-## Handle missing values
-train_df.fillna('NA', inplace=True)
-test_df.fillna('NA', inplace=True)
+#Split training set and testing set at 80% - 20%
+training = dataframe.sample(frac = 0.8,random_state = 1)
+X_train = training[features]
+y_train = training['label']
+X_test = dataframe.drop(training.index)[features]
 
+#Cross-validation at k = 5
+X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size = 0.2, random_state = 1)
 
-## Convert date from string format to datetime format
+#Logistic regression
+LR_Model = LogisticRegression()
+LR_Model.fit(X_train, y_train)
+LR_Predict = LR_Model.predict(X_valid)
+LR_Accuracy = accuracy_score(y_valid, LR_Predict)
+print("Accuracy: " + str(LR_Accuracy))
 
-#remove all time zone data by stripping + & GMT sign
-new_train_df = train_df['date'].str.replace('-','+')
-new_train_df = train_df['date'].str.replace('GMT','+')
-new = new_train_df.str.split("+",n=1,expand=True)
-train_df['date']=new[0] 
+LR_AUC = roc_auc_score(y_valid, LR_Predict) 
+print("AUC: " + str(LR_AUC))
 
-#remove all weekday data
-new_date = train_df['date'].str.split(",",n=1,expand=True)
+#Random Forest Classifier
+RFC_Model = RandomForestClassifier()
+RFC_Model.fit(X_train, y_train)
+RFC_Predict = RFC_Model.predict(X_valid)
+RFC_Accuracy = accuracy_score(y_valid, RFC_Predict)
+print("Accuracy: " + str(RFC_Accuracy))
 
-#find the index of the rows without weekday data
-index_null=pd.isnull(new_date).any(1).nonzero()[0]
+RFC_AUC = roc_auc_score(y_valid, RFC_Predict) 
+print("AUC: " + str(RFC_AUC))
 
-#shift the date from column 0 to column 1 to get the complete list of date
-new_date[1][index_null]=new_date[0][index_null]
+#KNN Classifier, 
+KNN_Model = KNeighborsClassifier()
+KNN_Model.fit(X_train, y_train)
+KNN_Predict = KNN_Model.predict(X_valid)
+KNN_Accuracy = accuracy_score(y_valid, KNN_Predict)
+print("Accuracy: " + str(KNN_Accuracy))
 
-#final data for date
-train_df['date']=new_date[1]
-
-#strip all space in date data
-train_df['date']=train_df['date'].str.strip()
-
-#convert string to time format
-train_df['date'] = pd.to_datetime(train_df['date'], format='%d %b %Y %H:%M:%S')
-
-#regenerate weekdays
-train_df['weekday']=train_df['date'].dt.dayofweek
-
-## Filtering column "mail_type"
-train_x = train_df[['mail_type']]
-train_y = train_df[['label']]
-
-test_x = test_df[['mail_type']]
-
-## Do one hot encoding of categorical feature
-feat_enc = OneHotEncoder()
-feat_enc.fit(train_x)
-train_x_featurized = feat_enc.transform(train_x)
-test_x_featurized = feat_enc.transform(test_x)
-
-## Train a simple KNN classifier using featurized data
-neigh = KNeighborsClassifier(n_neighbors=3)
-neigh.fit(train_x_featurized, train_y)
-pred_y = neigh.predict(test_x_featurized)
-
-## Save results to submission file
-pred_df = pd.DataFrame(pred_y, columns=['label'])
-pred_df.to_csv("knn_sample_submission.csv", index=True, index_label='Id')
+KNN_AUC = roc_auc_score(y_valid, KNN_Predict) 
+print("AUC: " + str(KNN_AUC))
